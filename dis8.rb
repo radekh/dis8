@@ -24,6 +24,7 @@ class Memory
   end
 end
 
+# BIN/RIM paper tape loader.
 class RIMLoader
   def initialize filename
     @filename = filename
@@ -86,8 +87,8 @@ class PDP8Dis
     else
     end
 
-    @code = Conf[:code]
-    @labels = Conf[:labels]
+    @code = Conf[:code]         # Hash of addresses marked as code
+    @labels = Conf[:labels]     # Hash of labels {address => 'label'}
   end
 
 
@@ -107,18 +108,18 @@ class PDP8Dis
     until bag.empty?
       adr = bag.first[0]      # Take some address from bag
       opcode = @memory[adr]
-      puts "INSPECTING: %o at address %o (%d)" % [opcode, adr, adr]
+      #DEBUG: puts "INSPECTING: %o at address %o (%d)" % [opcode, adr, adr]
       if regular_instruction? opcode # If its regular, mark next address.
-        puts ":IS REGULAR, adding %o (%d)" % [adr+1, adr+1]
+        #DEBUG: puts ":IS REGULAR, adding %o (%d)" % [adr+1, adr+1]
         bag.store(adr+1, :code)
         @code.store(adr+1, :code)
-        puts "BAG.next: #{bag.inspect}"
+        #DEBUG: puts "BAG.next: #{bag.inspect}"
       end
 
-      puts "BAG.-delete: #{bag.inspect}"
+      #DEBUG: puts "BAG.-delete: #{bag.inspect}"
       bag.delete(adr)
-      puts "BAG.end: #{bag.inspect}"
-      puts "CODE.end: #{@code.inspect}"
+      #DEBUG: puts "BAG.end: #{bag.inspect}"
+      #DEBUG: puts "CODE.end: #{@code.inspect}"
     end
 
   end
@@ -252,6 +253,11 @@ class PDP8Dis
       end
     end
   end
+end
+
+# This class encapsulates all the procedures and functions working
+# with OpCode.
+class PDP8OpCode
 end
 
 # For the simplicity we recognize only one parameter, the name of the
