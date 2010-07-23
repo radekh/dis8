@@ -1,0 +1,16 @@
+-*- coding:utf-8; lang:cz; -*-
+Architektura disassembleru pro PDP-8.
+====================================
+
+Funkce disassembleru je rozdělena do částí.  První částí je načtení binárního kódu prorgamu.  Disassembler umí načítat základní binární formáty PDP-8 jako je BIN, RIM.  Před načítáním jsou všechny buňky paměti označeny jako nepoužité.  Při načítání se v některých z nich pak objeví konkrétní binární data.  Mimo program načítá disassembler ještě pomocný konfigurační soubor který je vytvářen pro ten který konkrétní disassemblovaný program.  Základní informací která v tomto souboru je je seznam adres na kterých je jisto jistě kód, seznam adres na kterých jsou jisto jistě data a seznam symbolických názvů (labels) pro některé adresy.
+
+Samotný proces zpětného překladu probíhá tak, že se pro každou adresu, která je v seznamu adres s instrukcemi zkoumá instrukce v buňce.  Podle typu instrukce se do seznamu adres s instrukcemi přidají další adresy.
+	obyč instrukce CLA, CMA, ....   => addr+1 se přidá
+	instrukce skoku JMP 	 	=> cílová adresa se přidá
+	instrukce SKIP                  => addr+1, addr+2 se přidá
+        ...
+Tímto způsobem se postupně označí všechny buňky v paměti jestli potenciálně obsahují program nebo data.
+
+Poté co jsou všechny buňk označeny se od začátku paměti, nebo od zadané startovní adresy provede disassembling s využítím informací o labelech.
+
+
