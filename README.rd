@@ -1,1 +1,2 @@
-This is experimental disassembler for PDP-8 binaries.
+= Dis8
+is experimental disassembler for PDP-8 binaries.  It's life began as an handy tool to look into some PDP-8 binaries I want to know how they works.  It's still in highly experimental and development state.
