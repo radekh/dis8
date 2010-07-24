@@ -8,12 +8,19 @@ module PDP8
     # The main public method of the module Mnemo.  This is the one and
     # only method which may be called from outside of the module
     # Mnemo.
-    def self.mnemo opcode
+    def self.mnemo addr, opcode
       # The PDP8 has an eight basic instruction or class of
       # instructions.  These are distinguished by the first three bits
       # of opcode word.
 
       case opcode >> 9
+      when 0: 'AND%s %0.4o' % [addr_modifier(opcode), compute_addr(addr, opcode)]
+      when 1: 'TAD%s %0.4o' % [addr_modifier(opcode), compute_addr(addr, opcode)]
+      when 2: 'ISZ%s %0.4o' % [addr_modifier(opcode), compute_addr(addr, opcode)]
+      when 3: 'DCA%s %0.4o' % [addr_modifier(opcode), compute_addr(addr, opcode)]
+      when 4: 'JMS%s %0.4o' % [addr_modifier(opcode), compute_addr(addr, opcode)]
+      when 5: 'JMP%s %0.4o' % [addr_modifier(opcode), compute_addr(addr, opcode)]
+      when 6: iot opcode
       when 7: opr opcode
       else
         '%0.4o' % opcode          # FIXME: not yet implemented
@@ -22,37 +29,14 @@ module PDP8
     
     private      # !!! All other methods are private to the module !!!
 
-    # Old method.
-    #
-    # FIXME: remove
-    def get_mnemo opcode
-      case opcode >> 9
-      when 0
-        "AND %s %o\t/ %o" % [get_flags(opcode), opcode, opcode]
-      when 1
-        "TAD %s %o\t/ %o" % [get_flags(opcode), opcode, opcode]
-      when 2
-        "ISZ %s %o\t/ %o" % [get_flags(opcode), opcode, opcode]
-      when 3
-        "DCA %s %o\t/ %o" % [get_flags(opcode), opcode, opcode]
-      when 4
-        "JMS %s %o\t/ %o" % [get_flags(opcode), opcode, opcode]
-      when 5
-        "JMP %s %o\t/ %o" % [get_flags(opcode), opcode, opcode]
-      when 7
-        "%s\t/%o" % [get_oper(opcode), opcode]
-      else
-        sprintf "%o", opcode
+    def self.addr_modifier opcode
+      if opcode & 00400 == 00400 then ' I'
+      else ''
       end
     end
 
-    # Old Method
-    #
-    # FIXME:
-    def get_flags opcode
-      flags = ""
-      flags += 'I' if opcode & 00400
-      flags += 'Z' if (opcode & 00200) == 0
+    def self.compute_addr addr, opcode
+      OpCode.compute_addr addr, opcode
     end
 
     # Old Method
@@ -153,6 +137,26 @@ module PDP8
       end
     end
 
+    # Decoding IOT class instruction 110 xxx xxx xxx to get the
+    # propper mnemonic.
+    def self.iot opcode
+      if opcode & 06200 == 06200
+        mmu opcode
+      else
+        'IOT %0.4o' % opcode
+      end
+    end
+
+    # Decoding MMU opcodes from 06200 to 06277.
+    def self.mmu opcode
+      if    opcode == 06214 then 'RDF'
+      elsif opcode == 06224 then 'RIF'
+      elsif opcode & 06207 == 06201 then 'CDF %o' % [opcode & 070]
+      elsif opcode & 06207 == 06202 then 'CIF %o' % [opcode & 070]
+      else
+        'IOT %0.4o' % opcode
+      end
+    end
   end
 
 end

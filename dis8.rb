@@ -148,25 +148,62 @@ module PDP8
     # This method marks all the memory cells which probably contains
     # code.
     def mark_code
-      bag = @code.clone
-      # Go through all bag
-      puts "Traverse bag: #{bag.inspect}"
+      bag = @code; @code = {}
 
+      #DEBUG: puts "Traverse bag: #{bag.inspect}"
+      counter = 100             # DEBUG
+
+      # Go through all code addresses in bag
       until bag.empty?
-        adr = bag.first[0]      # Take some address from bag
-        opcode = @memory[adr]
-        #DEBUG: puts "INSPECTING: %o at address %o (%d)" % [opcode, adr, adr]
-        if OpCode.modify_pc? opcode #regular_instruction? opcode # If its regular, mark next address.
-          #DEBUG: puts ":IS REGULAR, adding %o (%d)" % [adr+1, adr+1]
-          bag.store(adr+1, :code)
-          @code.store(adr+1, :code)
-          #DEBUG: puts "BAG.next: #{bag.inspect}"
+        counter -= 1; break if counter == 0 # DEBUG
+
+        addr = bag.first[0]     # Take some address from bag
+        if @code.has_key? addr  # Was that address processed?
+          bag.delete(addr)
+          next
+        else                    # This is code.
+          @code.store(addr, :code)
+        end
+
+        field = addr & 070000
+        a     = addr & 007777
+        opcode = @memory[addr]
+
+        #DENUG:
+        puts ":Analyzing instruction at address %o: %s" % [addr, PDP8::Mnemo.mnemo(addr, opcode)]
+        if OpCode.jmp? opcode then
+          unless OpCode.indirect? opcode then
+            next_addr = OpCode.compute_addr(addr, opcode) | field
+            bag.store(next_addr, :code) unless @code.has_key? next_addr
+            puts ":IS JMP, adding %o" % [next_addr]
+          end
+        elsif OpCode.jms? opcode then
+          next_addr = (addr+1) & 07777 | field
+          bag.store(next_addr, :code) unless @code.has_key? next_addr
+          unless OpCode.indirect? opcode then
+            next_addr = (OpCode.compute_addr(addr, opcode)+1) & 07777 | field
+            bag.store(next_addr, :code) unless @code.has_key? next_addr
+            puts ":IS JMS, adding %o" % [next_addr]
+          end
+        elsif OpCode.skip_class? opcode then
+          next_addr = (addr+1) & 07777 | field
+          bag.store(next_addr, :code) unless @code.has_key? next_addr
+          next_addr = (addr+2) & 07777 | field
+          bag.store(next_addr, :code) unless @code.has_key? next_addr
+          puts ":IS Skip, adding %o" % [next_addr]
+        elsif OpCode.hlt? opcode then
+          #
+        else
+          next_addr = (addr+1) & 07777 | field
+          bag.store(next_addr, :code) unless @code.has_key? next_addr
+          puts ":IS Normal, next %o" % [next_addr]
         end
 
         #DEBUG: puts "BAG.-delete: #{bag.inspect}"
-        bag.delete(adr)
-        #DEBUG: puts "BAG.end: #{bag.inspect}"
-        #DEBUG: puts "CODE.end: #{@code.inspect}"
+        bag.delete(addr) # Remove analized instruction address from bag.
+        puts "BAG.end: #{bag.inspect}"
+        #DEBUG:
+        puts "CODE.end: #{@code.inspect}"
       end
 
     end
@@ -193,9 +230,9 @@ module PDP8
           # Is this word code?
           if @code.has_key? adr
             #mnemo = get_mnemo @memory[adr]
-            mnemo = Mnemo.mnemo @memory[adr]
+            mnemo = Mnemo.mnemo adr, @memory[adr]
           else
-            mnemo = "DW %d" % @memory[adr]
+            mnemo = "DW %0.4o" % @memory[adr]
           end
           printf "%s\t\t/%0.4o\n", mnemo, @memory[adr]
           last_ptr = ptr

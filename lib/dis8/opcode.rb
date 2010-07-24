@@ -41,9 +41,37 @@ module PDP8
     # Does the instruction modify pc in any way?  This is to detect
     # jump and skip instruction opcodes.
     def self.modify_pc? opcode
-      false                     # FIXME: not yet implemented
+      true                     # FIXME: not yet implemented
     end
 
+    def self.jmp? opcode
+      opcode & 07000 == 05000
+    end
+
+    def self.jms? opcode
+      opcode & 07000 == 04000
+    end
+
+    # Compute target address of instruction.
+    def self.compute_addr addr,opcode
+      if opcode & 0200 == 0200 then  # CP or ZP
+        addr & 07600 | opcode & 0177 # Current Page
+      else
+        opcode & 0177           # Zero Page
+      end
+    end
+
+    def self.indirect? opcode
+      opcode & 04000 == 04000
+    end
+
+    def self.hlt? opcode
+      opcode & 07402 == 07402
+    end
+
+    def self.skip_class? opcode
+      false                     # FIXME: not yet implemented
+    end
   end
 
 end
