@@ -4,3 +4,9 @@ doc
 
 # Editor working and backup files
 *~
+*.swp
+\#*
+.\#*
+
+# Some local scripts.
+do.sh
