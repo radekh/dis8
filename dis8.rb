@@ -245,10 +245,11 @@ class PDP8Dis
 
   # Check if the given opcode is regular instruction which do not change PC.
   def regular_instruction? opcode
+    oc = PDP8OpCode.new opcode
     if (opcode & 04000) == 0    # is AND,TAD,DCA,ISZ?
       true
-    elsif (opcode & 07000) == 07000 # is OPR?
-      if (opcode & 00400) == 0      # is OPR1?
+    elsif oc.opr?
+      if oc.opr1?
         true
       end
     end
@@ -258,7 +259,55 @@ end
 # This class encapsulates all the procedures and functions working
 # with OpCode.
 class PDP8OpCode
+
+  # Create new instance of OpCode from given machine word.
+  def initialize opcode
+    @opcode = opcode
+  end
+
+  # Is this opcode from OPR?
+  def opr?
+    (@opcode & 07000) == 07000
+  end
+
+  def opr1?
+    (@opcode & 0b111_100_000_000) == 0b111_000_000_000
+  end
+
+  def opr2?
+    (@opcode & 0b111_100_000_001) == 0b111_100_000_000
+  end
+
+  def opr3?
+    (@opcode & 0b111_100_000_001) == 0b111_100_000_001
+  end
+
+  def skip?
+    if opr2?
+      @opcode & 0b000_001_111_000
+    else
+      false
+    end
+  end
 end
+
+# The PDP8 modules and classes are organized in the main PDP8 module.
+# This is new program infrastructure and all code will be migrated
+# there.
+module PDP8
+
+  # Functions which provide different kond of informations about given
+  # OpCode.
+  module OpCode
+    def self.opr? opcode
+      opcode & 07000 == 07000
+    end
+  end
+
+  class Disasm
+  end
+end
+
 
 # For the simplicity we recognize only one parameter, the name of the
 # bin file.
