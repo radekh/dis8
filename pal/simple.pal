@@ -1,0 +1,6 @@
+/ File: simple.pal -*- mode:asm; -*-
+/ Simple pal program.
+	*451
+START,	NOP
+	HLT
+	$

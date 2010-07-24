@@ -1,0 +1,10 @@
+#!/bin/bash
+# Copyright (c) 2010 by Radek Hnilica
+# Comparing original source with disassembled binary file.
+if [[ $# != 1 ]]; then
+    echo "usage: $0 name"
+    exit 1
+fi
+NAME=$1
+
+grep -v "^/ " $NAME.pal |diff -U2 - $NAME.rev 

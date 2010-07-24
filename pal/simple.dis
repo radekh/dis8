@@ -1,0 +1,7 @@
+# Disassembler control file for simple.bin
+# -*- mode:ruby; coding:utf-8; -*-
+
+Conf = {
+     :labels => { 0451 => 'START' },
+     :code => { 0451 => :code }
+}

@@ -74,41 +74,6 @@ end
 
 
 
-# This class encapsulates all the procedures and functions working
-# with OpCode.
-class PDP8OpCode
-
-  # Create new instance of OpCode from given machine word.
-  def initialize opcode
-    @opcode = opcode
-  end
-
-  # Is this opcode from OPR?
-  def opr?
-    (@opcode & 07000) == 07000
-  end
-
-  def opr1?
-    (@opcode & 0b111_100_000_000) == 0b111_000_000_000
-  end
-
-  def opr2?
-    (@opcode & 0b111_100_000_001) == 0b111_100_000_000
-  end
-
-  def opr3?
-    (@opcode & 0b111_100_000_001) == 0b111_100_000_001
-  end
-
-  def skip?
-    if opr2?
-      @opcode & 0b000_001_111_000
-    else
-      false
-    end
-  end
-end
-
 # The PDP8 modules and classes are organized in the main PDP8 module.
 # This is new program infrastructure and all code will be migrated
 # there.
@@ -130,7 +95,7 @@ module PDP8
       begin
         eval File.new(@conf).read
       rescue ScriptError => e
-        warn("An error ocurred while reading #{@conf}: ", e)
+        warn "An error ocurred while reading #{@conf}: #{e.inspect}"
       else
       end
 
@@ -169,14 +134,13 @@ module PDP8
         a     = addr & 007777
         opcode = @memory[addr]
 
-        #DENUG:
-        puts ":Analyzing instruction at address %o: %s" % [addr, PDP8::Mnemo.mnemo(addr, opcode)]
+        #DEBUG: puts ":Analyzing instruction at address %o: %s" % [addr, PDP8::Mnemo.mnemo(addr, opcode)]
 
         if OpCode.jmp? opcode then
           unless OpCode.indirect? opcode then
             next_addr = OpCode.compute_addr(addr, opcode) | field
             bag.store(next_addr, :code) unless @code.has_key? next_addr
-            puts ":IS JMP, adding %o" % [next_addr]
+            #DEBUG: puts ":IS JMP, adding %o" % [next_addr]
           end
         elsif OpCode.jms? opcode then
           next_addr = (addr+1) & 07777 | field
@@ -184,31 +148,32 @@ module PDP8
           unless OpCode.indirect? opcode then
             next_addr = (OpCode.compute_addr(addr, opcode)+1) & 07777 | field
             bag.store(next_addr, :code) unless @code.has_key? next_addr
-            puts ":IS JMS, adding %o" % [next_addr]
+            #DEBUG: puts ":IS JMS, adding %o" % [next_addr]
           end
         elsif OpCode.conditional_skip? opcode then
           next_addr = (addr+1) & 07777 | field
           bag.store(next_addr, :code) unless @code.has_key? next_addr
           next_addr = (addr+2) & 07777 | field
           bag.store(next_addr, :code) unless @code.has_key? next_addr
-          puts ":IS Skip, adding %o" % [next_addr]
+          #DEBUG: puts ":IS Skip, adding %o" % [next_addr]
         elsif OpCode.hlt? opcode then
           #
         else
           next_addr = (addr+1) & 07777 | field
           bag.store(next_addr, :code) unless @code.has_key? next_addr
-          puts ":IS Normal, next %o" % [next_addr]
+          #DEBUG: puts ":IS Normal, next %o" % [next_addr]
         end
 
         #DEBUG: puts "BAG.-delete: #{bag.inspect}"
         bag.delete(addr) # Remove analized instruction address from bag.
-        puts "BAG.end: #{bag.inspect}"
-        #DEBUG:
-        puts "CODE.end: #{@code.inspect}"
+        #DEBUG: puts "BAG.end: #{bag.inspect}"
+        #DEBUG: puts "CODE.end: #{@code.inspect}"
       end
 
     end
 
+    # This method disassembles the whole program in memory.  During
+    # disassembly it usess information gathered by mark_code method.
     def disasm_memory
       ptr = 0; field = 0
       last_ptr = nil
@@ -216,7 +181,6 @@ module PDP8
         adr = (field << 12) + ptr # Compute memory address
         if not @memory[adr].nil?
           if ptr-1 != last_ptr
-            printf "\n"
             printf "\t*%o\n", ptr
           end
 
@@ -235,7 +199,7 @@ module PDP8
           else
             mnemo = "DW %0.4o" % @memory[adr]
           end
-          printf "%s\t\t/%0.4o\n", mnemo, @memory[adr]
+          printf "%s\n", mnemo
           last_ptr = ptr
         end
 
@@ -247,21 +211,10 @@ module PDP8
           field += 1
         end
       end
-    end
 
-    # Check if the given opcode is regular instruction which do not change PC.
-    def regular_instruction? opcode
-      oc = PDP8OpCode.new opcode
-      if (opcode & 04000) == 0    # is AND,TAD,DCA,ISZ?
-        true
-      elsif oc.opr?
-        if oc.opr1?
-          true
-        end
-      end
+      puts "\t$"          # End mark of the reconstructed source file.
     end
   end
-
 end
 
 
@@ -272,7 +225,7 @@ def main
   file = name + ".bin"
   conf = name + ".dis"
 
-  puts "Disassembling file #{file}."
+  #DEBUG: puts "Disassembling file #{file}."
   dis = PDP8::Disasm.new :file => file, :conf => conf
   dis.run
 end
