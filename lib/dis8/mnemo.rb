@@ -90,8 +90,10 @@ module PDP8
     def self.opr opcode
       if OpCode.opr1? opcode
         opr1 opcode 
-      else
-        'OPR'                     # FIXME: not yet implemented
+      elsif OpCode.opr2? opcode
+        opr2 opcode
+      elsif OpCode.opr3? opcode
+        opr3 opcode
       end
     end
 
@@ -99,6 +101,20 @@ module PDP8
     # in it.
     def self.opr1 opcode
       m = ''                    # We begin with blank mnemo
+      m += ' CLA' if opcode & 0200 == 0200
+      m.lstrip                  # Return
+    end
+
+    def self.opr2 opcode
+      # We begin with blank and add mnemo for each decode microinstruction.
+      m = ''
+      m += ' CLA' if opcode & 0200 == 0200
+      m.lstrip                  # Return
+    end
+
+    def self.opr3 opcode
+      # We begin with blank and add mnemo for each decode microinstruction.
+      m = ''
       m += ' CLA' if opcode & 0200 == 0200
       m.lstrip                  # Return
     end

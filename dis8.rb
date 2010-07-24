@@ -1,6 +1,9 @@
 #!/usr/bin/env ruby
 # Disassembler for PDP-8 programs.
 
+# Extend the LOAD_PATH with the program directory.
+$:.push File.dirname $0
+
 require 'lib/dis8/mnemo'
 require 'lib/dis8/opcode'
 
@@ -153,7 +156,7 @@ module PDP8
         adr = bag.first[0]      # Take some address from bag
         opcode = @memory[adr]
         #DEBUG: puts "INSPECTING: %o at address %o (%d)" % [opcode, adr, adr]
-        if regular_instruction? opcode # If its regular, mark next address.
+        if OpCode.modify_pc? opcode #regular_instruction? opcode # If its regular, mark next address.
           #DEBUG: puts ":IS REGULAR, adding %o (%d)" % [adr+1, adr+1]
           bag.store(adr+1, :code)
           @code.store(adr+1, :code)

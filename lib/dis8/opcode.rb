@@ -26,6 +26,24 @@ module PDP8
       opcode & 07400 == 07000
     end
 
+    # Operate group 2 microinstruction is identified by 1 in bit 3 and
+    # 0 in bit 11.
+    def self.opr2? opcode
+      opcode & 07401 == 07400
+    end
+
+    # Operate group 3 microinstruction is identified by 1 in bit 3 and
+    # 1 in bit 11.
+    def self.opr3? opcode
+      opcode & 07401 == 07401
+    end
+
+    # Does the instruction modify pc in any way?  This is to detect
+    # jump and skip instruction opcodes.
+    def self.modify_pc? opcode
+      false                     # FIXME: not yet implemented
+    end
+
   end
 
 end

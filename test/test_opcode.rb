@@ -6,6 +6,10 @@ class TestOpCode < Test::Unit::TestCase
   def test_opr?
     assert PDP8::OpCode.opr? 0b111_000_000_000
     assert PDP8::OpCode.opr? 0b111_110_000_000
+    # Operate Group 1, 2 and 3
+    assert PDP8::OpCode.opr1? 0b111_010_000_001 # CLA IAC
+    assert PDP8::OpCode.opr2? 0b111_100_001_000 # SKP
+    assert PDP8::OpCode.opr3? 0b111_101_000_001 # MQA
   end
 
   def test_basic_memory_access?
