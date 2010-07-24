@@ -171,6 +171,7 @@ module PDP8
 
         #DENUG:
         puts ":Analyzing instruction at address %o: %s" % [addr, PDP8::Mnemo.mnemo(addr, opcode)]
+
         if OpCode.jmp? opcode then
           unless OpCode.indirect? opcode then
             next_addr = OpCode.compute_addr(addr, opcode) | field
@@ -185,7 +186,7 @@ module PDP8
             bag.store(next_addr, :code) unless @code.has_key? next_addr
             puts ":IS JMS, adding %o" % [next_addr]
           end
-        elsif OpCode.skip_class? opcode then
+        elsif OpCode.conditional_skip? opcode then
           next_addr = (addr+1) & 07777 | field
           bag.store(next_addr, :code) unless @code.has_key? next_addr
           next_addr = (addr+2) & 07777 | field

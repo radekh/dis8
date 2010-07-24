@@ -16,4 +16,12 @@ class TestOpCode < Test::Unit::TestCase
     assert PDP8::OpCode.basic_memory_access? 0b000_000_000_000
     assert PDP8::OpCode.basic_memory_access? 0b011_111_111_111
   end
+
+  # Detection of conditional skip instructions.
+  def test_conditional_skip?
+    assert PDP8::OpCode.conditional_skip? 02777 # ISZ
+    assert PDP8::OpCode.conditional_skip? 07700 # CLA SMA
+    assert PDP8::OpCode.conditional_skip? 07430 # SZL
+    assert PDP8::OpCode.conditional_skip? 07560 # SMA SZA SNL
+  end
 end

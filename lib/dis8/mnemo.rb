@@ -22,8 +22,6 @@ module PDP8
       when 5: 'JMP%s %0.4o' % [addr_modifier(opcode), compute_addr(addr, opcode)]
       when 6: iot opcode
       when 7: opr opcode
-      else
-        '%0.4o' % opcode          # FIXME: not yet implemented
       end
     end
     
@@ -39,17 +37,52 @@ module PDP8
       OpCode.compute_addr addr, opcode
     end
 
-    # Old Method
-    #
-    # FIXME:
-    def get_rotate opcode
+    # Decoding Operate class instruction 111 xxx xxx xxx.
+    def self.opr opcode
+      if OpCode.opr1? opcode
+        opr1 opcode 
+      elsif OpCode.opr2? opcode
+        opr2 opcode
+      elsif OpCode.opr3? opcode
+        opr3 opcode
+      end
+    end
+
+    # Decoding Operate Group 1 instruction class to get all instruction names
+    # in it.  We have to follow the decoding sequence which is
+    # * CLA, CLL
+    # * CMA, CML
+    # * IAC
+    # * Rotate
+    def self.opr1 opcode
+      m = ''                    # We begin with blank mnemo
+      m += ' CLA' if opcode & 0200 == 0200
+      m += ' CLL' if opcode & 0100 == 0100
+      m += ' CMA' if opcode & 0040 == 0040
+      m += ' CML' if opcode & 0020 == 0020
+      m += ' IAC' if opcode & 0001 == 0001
+      m += ' '+rotate(opcode) if opcode & 0016 != 0
+      m = 'NOP' if m.empty?
+      m.strip                  # Return
+    end
+
+    # Decoding Rotate microinstruction in Operate Group 1.
+    def rotate opcode
       [ '', 'BSW', 'RAL', 'RTL', 'RAR', 'RTR', 'err', 'err' ][(opcode >> 1) &07]
     end
 
-    # Old Method
-    #
-    # FIXME:
-    def decode_skip opcode
+    def self.opr2 opcode
+      # We begin with blank and add mnemo for each decode microinstruction.
+      m = ''
+      m += ' CLA' if opcode & 0200 == 0200
+      m += ' '+skip(opcode) if opcode & 0170
+      m += ' OSR' if opcode & 0004 == 0004
+      m += ' HLT' if opcode & 0002 == 0002
+      m = 'NOP' if m.empty?
+      m.strip                  # Return
+    end
+
+    def self.skip opcode
       mnemo = ''
       if (opcode & 010) == 0
         mnemo += ' SMA' if opcode & 0100 == 0100
@@ -63,77 +96,31 @@ module PDP8
       mnemo
     end
 
-    # Old Method
-    #
-    # FIXME:
-    def decode_eae opcode
-      ' EAE'
-    end
-
-    # Decoding Operate class instruction 111 xxx xxx xxx.
-    def self.opr opcode
-      if OpCode.opr1? opcode
-        opr1 opcode 
-      elsif OpCode.opr2? opcode
-        opr2 opcode
-      elsif OpCode.opr3? opcode
-        opr3 opcode
-      end
-    end
-
-    # Decoding Operate1 instruction class to get all instruction names
-    # in it.
-    def self.opr1 opcode
-      m = ''                    # We begin with blank mnemo
-      m += ' CLA' if opcode & 0200 == 0200
-      m.lstrip                  # Return
-    end
-
-    def self.opr2 opcode
-      # We begin with blank and add mnemo for each decode microinstruction.
-      m = ''
-      m += ' CLA' if opcode & 0200 == 0200
-      m.lstrip                  # Return
-    end
-
     def self.opr3 opcode
       # We begin with blank and add mnemo for each decode microinstruction.
       m = ''
       m += ' CLA' if opcode & 0200 == 0200
-      m.lstrip                  # Return
+      m += ' MQA' if opcode & 0100 == 0100
+      m += ' SCA' if opcode & 0040 == 0040
+      m += ' MQL' if opcode & 0020 == 0020
+      m += ' '+eae(opcode) if opcode & 0016 != 0
+      m = 'NOP' if m.empty?
+      m.strip                  # Return
     end
+
+    def self.eae opcode
+      ' EAE'
+    end
+
 
     # Old Method
     #
     # FIXME:
     def get_oper opcode
       if (opcode & 0400) == 0
-        mnemo = ''
-        mnemo += ' CLA' if opcode & 0200 == 0200
-        mnemo += ' CLL' if opcode & 0100 == 0100
-        mnemo += ' CMA' if opcode & 0040 == 0040
-        mnemo += ' CML' if opcode & 0020 == 0020
-        mnemo += ' '+get_rotate(opcode) if opcode & 0016
-        mnemo += ' IAC' if opcode & 0001 == 0001
-        mnemo = 'NOP' if mnemo.empty?
-        mnemo.lstrip
       elsif (opcode & 0401) == 0400
         mnemo = ''
-        mnemo += ' '+decode_skip(opcode) if opcode & 0170
-        mnemo += ' CLA' if opcode & 0200 == 0200
-        mnemo += ' OSR' if opcode & 0004 == 0004
-        mnemo += ' HLT' if opcode & 0002 == 0002
-        mnemo = 'NOP' if mnemo.empty?
-        mnemo.lstrip
       elsif (opcode & 0401) == 0401
-        mnemo = ''
-        mnemo += ' CLA' if opcode & 0200 == 0200
-        mnemo += ' MQA' if opcode & 0100 == 0100
-        mnemo += ' SCA' if opcode & 0040 == 0040
-        mnemo += ' MQL' if opcode & 0020 == 0020
-        mnemo += ' '+decode_eae(opcode) if opcode & 0016
-        mnemo = 'NOP' if mnemo.empty?
-        mnemo.lstrip
       end
     end
 

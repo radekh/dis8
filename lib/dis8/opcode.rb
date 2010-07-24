@@ -52,6 +52,10 @@ module PDP8
       opcode & 07000 == 04000
     end
 
+    def self.isz? opcode
+      opcode & 07000 == 02000
+    end
+
     # Compute target address of instruction.
     def self.compute_addr addr,opcode
       if opcode & 0200 == 0200 then  # CP or ZP
@@ -69,8 +73,17 @@ module PDP8
       opcode & 07402 == 07402
     end
 
-    def self.skip_class? opcode
-      false                     # FIXME: not yet implemented
+    # Is this instruction from conditional skip class?  This is hard
+    # to detect because of IOT instructions with skip ability.  For
+    # the simplicity wi detect standard conditional skip instructions
+    # like ISZ, SMA, SZA, SNL, SPA, SNA and SNL.  The conditional skip
+    # instructions from IOT will be added one by one as found in
+    # documentation of peripheral devices or in programs.
+    def self.conditional_skip? opcode
+      if isz?(opcode) then true
+      elsif opr2?(opcode) && (opcode & 00170 != 0) then true
+      #elsif 
+      end
     end
   end
 
