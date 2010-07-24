@@ -28,6 +28,14 @@ class Memory
     loader = RIMLoader.new file
     loader.load @content
   end
+
+  # Debug dump of the memory.dump_code
+  def dump
+    puts "Memory dump:"
+    @content.each_index do |index|
+      puts "%0.5d: %0.4d" % [index, @content[index]] unless @content[index].nil?
+    end
+  end
 end
 
 # BIN/RIM paper tape loader.
@@ -108,6 +116,8 @@ module PDP8
       @memory.load_rim @file
       mark_code
       disasm_memory
+      @memory.dump
+      dump_code
     end
 
     # This method marks all the memory cells which probably contains
@@ -213,6 +223,15 @@ module PDP8
       end
 
       puts "\t$"          # End mark of the reconstructed source file.
+    end
+
+    # Dumping the debug hash for the debugging purposes.  Sometimes I
+    # need to know what's going on.
+    def dump_code
+      puts "dump_code:"
+      @code.each do |key,value|
+        puts "%0.5o, #{value}" % key
+      end
     end
   end
 end

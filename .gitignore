@@ -1,12 +1,16 @@
-# Generated documentation
+# Generated documentation.
 doc
 
-
-# Editor working and backup files
+# Editor working and backup files.
 *~
 *.swp
 \#*
 .\#*
+
+# Generated files in pal directory.
+pal/*.bin
+pal/*.lst
+pal/*.rev
 
 # Some local scripts.
 do.sh
