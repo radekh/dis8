@@ -40,7 +40,7 @@ module PDP8
 
 
     def run
-      @memory.load_rim @file
+      @memory.load_bin @file
       mark_code
       disasm_memory
       @memory.dump
