@@ -1,6 +1,9 @@
 #!/usr/bin/env ruby
+# File: lib/dis8/mnemo.rb
+# Copyright (c) 2010 by Radek Hnilica
 
 module PDP8
+
   # This module bundles all the functions form getting mnemonic code
   # to given instruction word.
   module Mnemo

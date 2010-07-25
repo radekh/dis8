@@ -11,7 +11,7 @@ revs    = $(subst .pal,.rev,$(sources))
 dis8	= ../dis8.rb
 
 .PHONY: all clean superclean
-all: $(lists) $(revs)
+all: $(lists) $(bins) $(revs)
 clean:
 	-rm *~
 

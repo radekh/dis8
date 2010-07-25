@@ -4,82 +4,9 @@
 # Extend the LOAD_PATH with the program directory.
 $:.push File.dirname $0
 
+require 'lib/dis8/memory'
 require 'lib/dis8/mnemo'
 require 'lib/dis8/opcode'
-
-# This is memory blok.
-class Memory
-  def initialize
-    @content = Array.new(0100000)
-  end
-
-  # Memory cell modifier (writter)
-  def []= address, value
-    @content[address] = value
-  end
-
-  # Memory cell accessor (reader)
-  def [] address
-    @content[address]
-  end
-
-  # Load the given RIM file into @ram.
-  def load_rim file
-    loader = RIMLoader.new file
-    loader.load @content
-  end
-
-  # Debug dump of the memory.dump_code
-  def dump
-    puts "Memory dump:"
-    @content.each_index do |index|
-      puts "%0.5d: %0.4d" % [index, @content[index]] unless @content[index].nil?
-    end
-  end
-end
-
-# BIN/RIM paper tape loader.
-class RIMLoader
-  def initialize filename
-    @filename = filename
-  end
-
-  def load memory
-    byte = 0; word = 0; origin = 0; field = 0
-    File.open @filename do |f|
-      # Skip till LEADER mark (0b 1000 000)
-      byte = 0200
-      while byte == 0200
-        byte = f.readchar
-      end
-
-      # In 'endless' loop we interpret data on the paper tape.
-      while true
-        #DEBUG:puts ":BYTE=#{byte}, #{byte >> 6}"
-        case byte >> 6
-        when 0b00               # DATA
-          word = (byte << 6) | f.readchar
-          #DEBUG:puts ":WORD=#{word}"
-          #puts "#{(field << 12) + origin}: #{word}"
-          #DEBUG:printf "%0.5o: %0.4o\n", (field << 12) + origin, word
-          memory[(field << 12) + origin] = word
-          origin = (origin +1) & 07777
-        when 0b01               # ORIGIN
-          origin = ((byte & 0b00_111_111) << 6) | f.readchar
-          #DEBUG:printf ":ORIGIN = %0.4o\n", origin
-        when 0b10               # TRAILER
-          #DEBUG:printf ":TRAILER found %0.3o\n", byte
-          break
-        when 0b11               # FIELD SETTING
-          #DEBUG:puts ":SET FIELD #{(byte & 070) >>3}"
-          field = (byte & 070) >>3
-        end
-        byte = f.readchar
-      end
-    end
-  end
-end
-
 
 
 # The PDP8 modules and classes are organized in the main PDP8 module.
