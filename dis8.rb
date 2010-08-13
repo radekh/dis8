@@ -43,8 +43,6 @@ module PDP8
       @memory.load_bin @file
       mark_code
       disasm_memory
-      @memory.dump
-      dump_code
     end
 
     # This method marks all the memory cells which probably contains
@@ -53,20 +51,21 @@ module PDP8
       bag = @code; @code = {}
 
       #DEBUG: puts "Traverse bag: #{bag.inspect}"
-      counter = 100             # DEBUG
+      counter = 200             # DEBUG
 
       # Go through all code addresses in bag
       until bag.empty?
         counter -= 1; break if counter == 0 # DEBUG
 
         addr = bag.first[0]     # Take some address from bag
-        if @code.has_key? addr  # Was that address processed?
-          bag.delete(addr)
+        if @code.has_key? addr  # Was that address already processed?
+          bag.delete(addr)      # Yes
           next
-        else                    # This is code.
+        else                    # No, and its code address.
           @code.store(addr, :code)
         end
 
+        # Parse adress and get the opcode.
         field = addr & 070000
         a     = addr & 007777
         opcode = @memory[addr]

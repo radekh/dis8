@@ -76,8 +76,7 @@ module PDP8
           when 0b10             # TRAILER marks the end of tape.
             # Last word written to memory is checksum.  We must check
             # it and remove from memory.
-            #origin = (origin -1) & 07777
-            checkum &= 07777
+            checksum &= 07777
             if checksum != word then
               puts "BIN loader checksum error: computer=%0.4o, on tape=%0.4o" % [checksum, word]
               exit
